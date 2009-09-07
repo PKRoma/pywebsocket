@@ -38,16 +38,28 @@ Installation:
 
    Example snippet of httpd.conf:
    (mod_pywebsocket is in /websock_lib, Web Socket handlers are in
-   /websock_handlers, port is 81)
+   /websock_handlers, port is 80 for ws, 443 for wss)
 
        <IfModule python_module>
+
          PythonPath "sys.path+['/websock_lib']"
          PythonOption mod_pywebsocket.handler_root /websock_handlers
-         Listen 81
-         <VirtualHost _default_:81>
+         PythonOption mod_pywebsocket.secure_ports 443
+
+         Listen 80
+         <VirtualHost _default_:80>
            PythonConnectionHandler mod_pywebsocket.connhandler
            LogLevel debug
          </VirtualHost>
+
+         Listen 443
+         <VirtualHost _default_:443>
+           PythonConnectionHandler mod_pywebsocket.connhandler
+           LogLevel debug
+           SSLEngine on
+           # ... Other SSL configuration here ...
+         </VirtualHost>
+
        </IfModule>
 
 

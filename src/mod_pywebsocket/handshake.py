@@ -19,8 +19,8 @@
 import re
 
 
-_DEFAULT_WEB_SOCKET_PORT = 81
-_DEFAULT_WEB_SOCKET_PORT_IN_CLIENT_HEADER = 80
+_DEFAULT_WEB_SOCKET_PORT = 80
+_DEFAULT_WEB_SOCKET_SECURE_PORT = 443
 
 _METHOD_LINE = re.compile(r'^GET ([^ ]+) HTTP/1.1\r\n$')
 
@@ -43,7 +43,7 @@ def _validate_protocol(protocol):
     """Validate WebSocket-Protocol string."""
 
     if not protocol:
-        raise HandshakeError('Invalid: Empty WebSocket-Protocol')
+        raise HandshakeError('Invalid WebSocket-Protocol: empty')
     for c in protocol:
         if not 0x21 <= ord(c) <= 0x7e:
             raise HandshakeError('Illegal character in protocol: %r' % c)
@@ -85,14 +85,20 @@ class Handshaker(object):
 
     def _set_location(self):
         location_parts = []
-        location_parts.append('ws://')
+        location_parts.append('ws')
+        if self._conn_context.secure:
+            location_parts.append('s')
+        location_parts.append('://')
         host, port = self._parse_host_header()
         conn_port = self._conn_context.conn.local_addr[1]
         if port != conn_port:
             raise HandshakeError('Header/connection port mismatch: %d/%d' %
                                  (port, conn_port))
         location_parts.append(host)
-        if port != _DEFAULT_WEB_SOCKET_PORT:
+        if ((not self._conn_context.secure and
+             port != _DEFAULT_WEB_SOCKET_PORT) or
+            (self._conn_context.secure and
+             port != _DEFAULT_WEB_SOCKET_SECURE_PORT)):
             location_parts.append(':')
             location_parts.append(str(port))
         location_parts.append(self._conn_context.resource)
@@ -101,7 +107,10 @@ class Handshaker(object):
     def _parse_host_header(self):
         fields = self._conn_context.headers['Host'].split(':', 1)
         if len(fields) == 1:
-            return fields[0], _DEFAULT_WEB_SOCKET_PORT_IN_CLIENT_HEADER
+            port = _DEFAULT_WEB_SOCKET_PORT
+            if self._conn_context.secure:
+                port = _DEFAULT_WEB_SOCKET_SECURE_PORT
+            return fields[0], port
         try:
             return fields[0], int(fields[1])
         except ValueError, e:

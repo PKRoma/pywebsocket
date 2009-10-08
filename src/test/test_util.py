@@ -1,18 +1,33 @@
 #!/usr/bin/env python
 #
-# Copyright 2009 Google Inc.
+# Copyright 2009, Google Inc.
+# All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#     * Neither the name of Google Inc. nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 """Tests for util module."""
@@ -33,23 +48,6 @@ class UtilTest(unittest.TestCase):
             trace = util.get_stack_trace()
             self.failUnless(trace.startswith('Traceback'))
             self.failUnless(trace.find('ZeroDivisionError') != -1)
-
-    def test_parse_port_list(self):
-        ports, warnings = util.parse_port_list('10')
-        self.assertEqual(1, len(ports))
-        self.assertEqual(10, ports[0])
-        self.assertEqual(0, len(warnings))
-
-        ports, warnings = util.parse_port_list('100, 200 , 300, ,,')
-        self.assertEqual(3, len(ports))
-        for expected, actual in zip([100, 200, 300], ports):
-            self.assertEqual(expected, actual)
-        self.assertEqual(0, len(warnings))
-
-        ports, warnings = util.parse_port_list('0x100,200')
-        self.assertEqual(1, len(ports))
-        self.assertEqual(200, ports[0])
-        self.assertEqual(1, len(warnings))
 
 
 if __name__ == '__main__':

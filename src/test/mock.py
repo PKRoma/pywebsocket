@@ -1,16 +1,31 @@
-# Copyright 2009 Google Inc.
+# Copyright 2009, Google Inc.
+# All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#     * Neither the name of Google Inc. nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 """Mocks for testing.
@@ -122,6 +137,57 @@ class MockBlockingConn(_MockConnBase):
 
         for byte in bytes:
             self._queue.put(byte)
+
+
+class MockTable(dict):
+    """Mock table.
+
+    This mimicks mod_python mp_table. Note that only the methods used by
+    tests are overridden.
+    """
+
+    def __init__(self, copy_from={}):
+        if isinstance(copy_from, dict):
+            copy_from = copy_from.items()
+        for key, value in copy_from:
+            self.__setitem__(key, value)
+
+    def __getitem__(self, key):
+        return super(MockTable, self).__getitem__(key.lower())
+
+    def __setitem__(self, key, value):
+        super(MockTable, self).__setitem__(key.lower(), value)
+
+    def get(self, key, def_value=None):
+        return super(MockTable, self).get(key.lower(), def_value)
+
+
+class MockRequest(object):
+    """Mock request.
+
+    This mimics mod_python request.
+    """
+
+    def __init__(self, uri=None, headers_in={}, connection=None,
+                 is_https=False):
+        """Construct an instance.
+
+        Arguments:
+            uri: URI of the request.
+            headers_in: Request headers.
+            connection: Connection used for the request.
+            is_https: Whether this request is over SSL.
+
+        See the document of mod_python mp_conn for details.
+        """
+        self.uri = uri
+        self.connection = connection
+        self.headers_in = MockTable(headers_in)
+        self.is_https_ = is_https
+
+    def is_https(self):
+        """Return whether this request is over SSL."""
+        return self.is_https_
 
 
 class MockDispatcher(object):

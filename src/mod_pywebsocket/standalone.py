@@ -87,11 +87,12 @@ from mod_pywebsocket import util
 
 
 _LOG_LEVELS = {
-    'debug': logging.DEBUG,
-    'info': logging.INFO,
-    'warn': logging.WARN,
-    'error': logging.ERROR,
-    'critical': logging.CRITICAL};
+    'debug'    : logging.DEBUG,
+    'info'     : logging.INFO,
+    'warn'     : logging.WARN,
+    'error'    : logging.ERROR,
+    'critical' : logging.CRITICAL
+}
 
 _DEFAULT_LOG_MAX_BYTES = 1024 * 256
 _DEFAULT_LOG_BACKUP_COUNT = 5
@@ -271,7 +272,7 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
                 return False
             except Exception, e:
                 logging.warning('mod_pywebsocket: %s' % e)
-                logging.warning('mod_pywebsocket: %s' % util.get_stack_trace())
+                logging.info('mod_pywebsocket: %s' % util.get_stack_trace())
                 return False
         return result
 

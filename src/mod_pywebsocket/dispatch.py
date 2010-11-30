@@ -32,7 +32,6 @@
 """
 
 
-import logging
 import os
 import re
 
@@ -134,8 +133,6 @@ class Dispatcher(object):
                       scan time when root_dir contains many subdirectories.
         """
 
-        self._logger = logging.getLogger('mod_pywebsocket.dispatch')
-
         self._handlers = {}
         self._source_warnings = []
         if scan_dir is None:
@@ -201,18 +198,24 @@ class Dispatcher(object):
 
         unused_do_extra_handshake, transfer_data_ = self._handler(request)
         try:
-            transfer_data_(request)
-            msgutil.close_connection(request)
-        except msgutil.MsgUtilException, e:
-            # Catches MsgUtilException, ConnectionTerminatedException and
-            # and msgutil.ConnectionClosedException the handler didn't handle.
-            self._logger.debug('%s' % e)
-        except Exception, e:
-            util.prepend_message_to_exception(
-                '%s raised exception for %s: ' % (
+            try:
+                transfer_data_(request)
+            except msgutil.ConnectionTerminatedException, e:
+                util.prepend_message_to_exception(
+                    'client initiated closing handshake for %s: ' % (
+                    request.ws_resource),
+                    e)
+                raise
+            except Exception, e:
+                print 'exception: %s' % type(e)
+                util.prepend_message_to_exception(
+                    '%s raised exception for %s: ' % (
                     _TRANSFER_DATA_HANDLER_NAME, request.ws_resource),
-                e)
-            raise
+                    e)
+                raise
+        finally:
+            msgutil.close_connection(request)
+
 
     def _handler(self, request):
         try:

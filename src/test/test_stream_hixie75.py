@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2009, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,40 +30,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Tests for memorizingfile module."""
+"""Tests for stream module."""
 
 
-import StringIO
 import unittest
 
 import set_sys_path  # Update sys.path to locate mod_pywebsocket module.
 
-from mod_pywebsocket import memorizingfile
+from mod_pywebsocket.stream import StreamHixie75
+from test.test_msgutil import _create_request_hixie75
 
 
-class UtilTest(unittest.TestCase):
-    def check(self, memorizing_file, num_read, expected_list):
-        for unused in range(num_read):
-            memorizing_file.readline()
-        actual_list = memorizing_file.get_memorized_lines()
-        self.assertEqual(len(expected_list), len(actual_list))
-        for expected, actual in zip(expected_list, actual_list):
-            self.assertEqual(expected, actual)
-
-    def test_get_memorized_lines(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                'Hello\nWorld\nWelcome'))
-        self.check(memorizing_file, 3, ['Hello\n', 'World\n', 'Welcome'])
-
-    def test_get_memorized_lines_limit_memorized_lines(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                'Hello\nWorld\nWelcome'), 2)
-        self.check(memorizing_file, 3, ['Hello\n', 'World\n'])
-
-    def test_get_memorized_lines_empty_file(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                ''))
-        self.check(memorizing_file, 10, [])
+class StreamHixie75Test(unittest.TestCase):
+    def test_payload_length(self):
+        for length, bytes in ((0, '\x00'), (0x7f, '\x7f'), (0x80, '\x81\x00'),
+                              (0x1234, '\x80\xa4\x34')):
+            test_stream = StreamHixie75(_create_request_hixie75(bytes))
+            self.assertEqual(
+                length, test_stream._read_payload_length_hixie75())
 
 
 if __name__ == '__main__':

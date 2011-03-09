@@ -28,7 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Web Socket handshaking defined in draft-hixie-thewebsocketprotocol-75.
+"""WebSocket handshaking defined in draft-hixie-thewebsocketprotocol-75.
 
 Note: request.connection.write/read are used in this module, even though
 mod_python document says that they should be used only in connection handlers.
@@ -40,11 +40,12 @@ not suitable because they don't allow direct raw bytes writing/reading.
 import logging
 import re
 
-from mod_pywebsocket import msgutil
-from mod_pywebsocket import stream_hixie75
+from mod_pywebsocket import common
+from mod_pywebsocket.stream import StreamHixie75
+from mod_pywebsocket import util
 from mod_pywebsocket.handshake._base import HandshakeError
 from mod_pywebsocket.handshake._base import build_location
-from mod_pywebsocket.handshake._base import validate_protocol
+from mod_pywebsocket.handshake._base import validate_subprotocol
 
 
 _MANDATORY_HEADERS = [
@@ -73,7 +74,7 @@ _SIXTH_AND_LATER = re.compile(
 
 
 class Handshaker(object):
-    """This class performs Web Socket handshake."""
+    """This class performs WebSocket handshake."""
 
     def __init__(self, request, dispatcher, strict=False):
         """Construct an instance.
@@ -89,14 +90,14 @@ class Handshaker(object):
         handshake.
         """
 
-        self._logger = logging.getLogger('mod_pywebsocket.draft75')
+        self._logger = util.get_class_logger(self)
 
         self._request = request
         self._dispatcher = dispatcher
         self._strict = strict
 
     def do_handshake(self):
-        """Perform Web Socket Handshake.
+        """Perform WebSocket Handshake.
 
         On _request, we set
             ws_resource, ws_origin, ws_location, ws_protocol
@@ -109,7 +110,7 @@ class Handshaker(object):
         self._set_resource()
         self._set_origin()
         self._set_location()
-        self._set_protocol()
+        self._set_subprotocol()
         self._set_protocol_version()
         self._dispatcher.do_extra_handshake(self._request)
         self._send_handshake()
@@ -123,17 +124,16 @@ class Handshaker(object):
     def _set_location(self):
         self._request.ws_location = build_location(self._request)
 
-    def _set_protocol(self):
-        protocol = self._request.headers_in.get('WebSocket-Protocol')
-        if protocol is not None:
-            validate_protocol(protocol)
-        self._request.ws_protocol = protocol
+    def _set_subprotocol(self):
+        subprotocol = self._request.headers_in.get('WebSocket-Protocol')
+        if subprotocol is not None:
+            validate_subprotocol(subprotocol)
+        self._request.ws_protocol = subprotocol
 
     def _set_protocol_version(self):
-        self._logger.debug('IETF Hixie 75 framing')
-        self._request.ws_stream = stream_hixie75.StreamHixie75(self._request)
-        # None means Hixie 75 version protocol
-        self._request.ws_version = msgutil.VERSION_HIXIE75
+        self._logger.debug('IETF Hixie 75 protocol')
+        self._request.ws_version = common.VERSION_HIXIE75
+        self._request.ws_stream = StreamHixie75(self._request)
 
     def _send_handshake(self):
         self._request.connection.write(

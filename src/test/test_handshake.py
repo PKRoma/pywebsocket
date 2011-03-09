@@ -35,10 +35,12 @@
 
 import unittest
 
-import config  # This must be imported before mod_pywebsocket.
-from mod_pywebsocket import handshake
+import set_sys_path  # Update sys.path to locate mod_pywebsocket module.
 
-import mock
+from mod_pywebsocket import handshake
+from mod_pywebsocket.handshake._base import HandshakeError
+from mod_pywebsocket.handshake._base import validate_subprotocol
+from test import mock
 
 
 _GOOD_REQUEST = (
@@ -341,22 +343,22 @@ def _create_requests_with_lines(request_lines_set):
 
 
 class HandshakerTest(unittest.TestCase):
-    def test_validate_protocol(self):
-        handshake.validate_protocol('sample')  # should succeed.
-        handshake.validate_protocol('Sample')  # should succeed.
-        handshake.validate_protocol('sample\x20protocol')  # should succeed.
-        handshake.validate_protocol('sample\x7eprotocol')  # should succeed.
-        self.assertRaises(handshake.HandshakeError,
-                          handshake.validate_protocol,
+    def test_validate_subprotocol(self):
+        validate_subprotocol('sample')  # should succeed.
+        validate_subprotocol('Sample')  # should succeed.
+        validate_subprotocol('sample\x20protocol')  # should succeed.
+        validate_subprotocol('sample\x7eprotocol')  # should succeed.
+        self.assertRaises(HandshakeError,
+                          validate_subprotocol,
                           '')
-        self.assertRaises(handshake.HandshakeError,
-                          handshake.validate_protocol,
+        self.assertRaises(HandshakeError,
+                          validate_subprotocol,
                           'sample\x19protocol')
-        self.assertRaises(handshake.HandshakeError,
-                          handshake.validate_protocol,
+        self.assertRaises(HandshakeError,
+                          validate_subprotocol,
                           'sample\x7fprotocol')
-        self.assertRaises(handshake.HandshakeError,
-                          handshake.validate_protocol,
+        self.assertRaises(HandshakeError,
+                          validate_subprotocol,
                           # "Japan" in Japanese
                           u'\u65e5\u672c')
 
@@ -434,7 +436,7 @@ class HandshakerTest(unittest.TestCase):
         for request in map(_create_request, _BAD_REQUESTS):
             handshaker = handshake.Handshaker(request,
                                               mock.MockDispatcher())
-            self.assertRaises(handshake.HandshakeError, handshaker.do_handshake)
+            self.assertRaises(HandshakeError, handshaker.do_handshake)
 
 
 if __name__ == '__main__':

@@ -31,7 +31,7 @@
 """PythonHeaderParserHandler for mod_pywebsocket.
 
 Apache HTTP Server and mod_python must be configured such that this
-function is called to handle Web Socket request.
+function is called to handle WebSocket request.
 """
 
 import logging
@@ -111,7 +111,7 @@ def headerparserhandler(request):
 
     try:
         allowDraft75 = apache.main_server.get_options().get(
-		_PYOPT_ALLOW_DRAFT75, None)
+            _PYOPT_ALLOW_DRAFT75, None)
         handshaker = handshake.Handshaker(request, _dispatcher,
                                           allowDraft75=allowDraft75)
         handshaker.do_handshake()
@@ -132,6 +132,8 @@ def headerparserhandler(request):
     except dispatch.DispatchError, e:
         request.log_error('mod_pywebsocket: %s' % e, apache.APLOG_WARNING)
         return apache.DECLINED
+    # Set assbackwards to suppress response header generation by Apache.
+    request.assbackwards = 1
     return apache.DONE  # Return DONE such that no other handlers are invoked.
 
 

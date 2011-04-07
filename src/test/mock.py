@@ -35,8 +35,8 @@
 import Queue
 import threading
 
-from mod_pywebsocket import msgutil
-from mod_pywebsocket import stream_hixie75
+from mod_pywebsocket import common
+from mod_pywebsocket.stream import StreamHixie75
 
 
 class _MockConnBase(object):
@@ -192,8 +192,9 @@ class MockRequest(object):
         # self.is_https_ needs to be accessible from tests.  To avoid name
         # conflict with self.is_https(), it is named as such.
         self.is_https_ = is_https
-        self.ws_stream = stream_hixie75.StreamHixie75(self)
-        self.ws_version = msgutil.VERSION_HYBI00
+        self.ws_stream = StreamHixie75(self)
+        self.ws_version = common.VERSION_HYBI00
+        self.ws_deflate = False
 
     def is_https(self):
         """Return whether this request is over SSL."""
@@ -203,8 +204,11 @@ class MockRequest(object):
 class MockDispatcher(object):
     """Mock for dispatch.Dispatcher."""
 
+    def __init__(self):
+        self.do_extra_handshake_called = False
+
     def do_extra_handshake(self, conn_context):
-        pass
+        self.do_extra_handshake_called = True
 
     def transfer_data(self, conn_context):
         pass

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2009, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,44 +28,40 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Tests for memorizingfile module."""
+# Constants indicating WebSocket protocol version.
+VERSION_HYBI06 = 6
+VERSION_HYBI00 = 0
+VERSION_HIXIE75 = -1
 
+# Port numbers
+DEFAULT_WEB_SOCKET_PORT = 80
+DEFAULT_WEB_SOCKET_SECURE_PORT = 443
 
-import StringIO
-import unittest
+# Schemes
+WEB_SOCKET_SCHEME = 'ws'
+WEB_SOCKET_SECURE_SCHEME = 'wss'
 
-import set_sys_path  # Update sys.path to locate mod_pywebsocket module.
+# Frame opcodes defined in the spec.
+OPCODE_CONTINUATION = 0x0
+OPCODE_CLOSE = 0x1
+OPCODE_PING = 0x2
+OPCODE_PONG = 0x3
+OPCODE_TEXT = 0x4
+OPCODE_BINARY = 0x5
 
-from mod_pywebsocket import memorizingfile
+# UUIDs used by HyBi 06 opening handshake and frame masking.
+WEBSOCKET_ACCEPT_UUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
-
-class UtilTest(unittest.TestCase):
-    def check(self, memorizing_file, num_read, expected_list):
-        for unused in range(num_read):
-            memorizing_file.readline()
-        actual_list = memorizing_file.get_memorized_lines()
-        self.assertEqual(len(expected_list), len(actual_list))
-        for expected, actual in zip(expected_list, actual_list):
-            self.assertEqual(expected, actual)
-
-    def test_get_memorized_lines(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                'Hello\nWorld\nWelcome'))
-        self.check(memorizing_file, 3, ['Hello\n', 'World\n', 'Welcome'])
-
-    def test_get_memorized_lines_limit_memorized_lines(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                'Hello\nWorld\nWelcome'), 2)
-        self.check(memorizing_file, 3, ['Hello\n', 'World\n'])
-
-    def test_get_memorized_lines_empty_file(self):
-        memorizing_file = memorizingfile.MemorizingFile(StringIO.StringIO(
-                ''))
-        self.check(memorizing_file, 10, [])
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-# vi:sts=4 sw=4 et
+# Opening handshake header names and expected values.
+UPGRADE_HEADER = 'Upgrade'
+WEBSOCKET_UPGRADE_TYPE = 'websocket'
+WEBSOCKET_UPGRADE_TYPE_HIXIE75 = 'WebSocket'
+CONNECTION_HEADER = 'Connection'
+UPGRADE_CONNECTION_TYPE = 'Upgrade'
+HOST_HEADER = 'Host'
+SEC_WEBSOCKET_ORIGIN_HEADER = 'Sec-WebSocket-Origin'
+SEC_WEBSOCKET_KEY_HEADER = 'Sec-WebSocket-Key'
+SEC_WEBSOCKET_ACCEPT_HEADER = 'Sec-WebSocket-Accept'
+SEC_WEBSOCKET_VERSION_HEADER = 'Sec-WebSocket-Version'
+SEC_WEBSOCKET_PROTOCOL_HEADER = 'Sec-WebSocket-Protocol'
+SEC_WEBSOCKET_EXTENSIONS_HEADER = 'Sec-WebSocket-Extensions'

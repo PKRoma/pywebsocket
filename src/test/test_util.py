@@ -37,10 +37,13 @@ import os
 import sys
 import unittest
 
-import config  # This must be imported before mod_pywebsocket.
+import set_sys_path  # Update sys.path to locate mod_pywebsocket module.
+
 from mod_pywebsocket import util
 
+
 _TEST_DATA_DIR = os.path.join(os.path.split(__file__)[0], 'testdata')
+
 
 class UtilTest(unittest.TestCase):
     def test_get_stack_trace(self):
@@ -69,6 +72,35 @@ class UtilTest(unittest.TestCase):
             os.path.join(_TEST_DATA_DIR, 'hello.pl')))
         self.assertEqual(cygwin_perl + ' -wT', util.get_script_interp(
             os.path.join(_TEST_DATA_DIR, 'hello.pl'), cygwin_path))
+
+    def test_hexify(self):
+        self.assertEqual('61 7a 41 5a 30 39 20 09 0d 0a 00 ff',
+                         util.hexify('azAZ09 \t\r\n\x00\xff'))
+
+
+class RepeatedXorMaskerTest(unittest.TestCase):
+    def test_mask(self):
+        # Sample input e6,97,a5 is U+65e5 in UTF-8
+        masker = util.RepeatedXorMasker('\xff\xff\xff')
+        result = masker.mask('\xe6\x97\xa5')
+        self.assertEqual('\x19\x68\x5a', result)
+
+        masker = util.RepeatedXorMasker('\x00\x00\x00')
+        result = masker.mask('\xe6\x97\xa5')
+        self.assertEqual('\xe6\x97\xa5', result)
+
+        masker = util.RepeatedXorMasker('\xe6\x97\xa5')
+        result = masker.mask('\xe6\x97\xa5')
+        self.assertEqual('\x00\x00\x00', result)
+
+    def test_mask_twice(self):
+        masker = util.RepeatedXorMasker('\x00\x7f\xff')
+        # mask[0], mask[1], ... will be used.
+        result = masker.mask('\x00\x00\x00\x00\x00')
+        self.assertEqual('\x00\x7f\xff\x00\x7f', result)
+        # mask[2], mask[0], ... will be used for the next call.
+        result = masker.mask('\x00\x00\x00\x00\x00')
+        self.assertEqual('\xff\x00\x7f\xff\x00', result)
 
 
 if __name__ == '__main__':
